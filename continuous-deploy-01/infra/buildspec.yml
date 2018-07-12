@@ -1,0 +1,30 @@
+version: 0.2
+ 
+phases:
+  install:
+    commands:
+      - |
+        echo "Build & Test started on `date`"
+        echo `uname -a`
+        echo `node --version`
+        npm install
+  pre_build:
+    commands:
+      - |
+        echo "Nothing to do in the pre_build phase..."
+  build:
+    commands:
+      - |
+        [ -d .cfn ] || mkdir .cfn
+        aws configure set default.region $AWS_REGION
+        for template in infra/cfn/*.yml; do
+          node_modules/.bin/cfn-lint validate $template
+        done
+  post_build:
+    commands:
+      - |
+        echo "Nothing to do in the post_build phase..."
+        echo "Build & Test completed on `date`"
+artifacts:
+  files:
+    - '**/*'

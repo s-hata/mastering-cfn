@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Test"
+Parameters:
+  Identifier:
+    Description: "Identifier"
+    Type: "String"
+  CodeBuildProjectName:
+    Description: "Name of CodeBuild project to test the CloudFormation templates."
+    Type: "String"
+Mappings:
+  CONSTRAINTS:
+    CODEBUILD:
+      SERVICEROLEPOLICYNAME: "SERVICEROLEPOLICYNAME"
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Ref CodeBuildProjectName
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/nodejs:8.11.0
+        EnvironmentVariables:
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+      Source:
+        BuildSpec: "infra/buildspec.yml"
+        Type: CODEPIPELINE
+  CodeBuildServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Join [ "-", [ !Sub "${AWS::StackName}", !FindInMap [CONSTRAINTS, CODEBUILD, SERVICEROLEPOLICYNAME]]]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${CodeBuildProjectName}
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${CodeBuildProjectName}:*
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+              - Effect: Allow
+                Resource:
+                  - "*"
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+              - Effect: Allow
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/CodeBuild/*
+                Action:
+                  - ssm:GetParameters

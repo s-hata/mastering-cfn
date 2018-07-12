@@ -1,0 +1,259 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Network envrionment"
+Parameters:
+  Identifier:
+    Description: "Identifier"
+    Type: "String"
+    Default: "Tools"
+  VpcCidrBlock:
+    Description: "CIDR Block of VPC"
+    Type: "String"
+    Default: "10.99.0.0/16"
+  PublicSubnetACidrBlock:
+    Description: "CIDR Block of Public Subnet A"
+    Type: String
+    Default: "10.99.0.0/19"
+  PublicSubnetBCidrBlock:
+    Description: "CIDR Block of Public Subnet C"
+    Type: String
+    Default: "10.99.32.0/19"
+  PrivateAPSubnetACidrBlock:
+    Description: "CIDR Block of Private AP Subnet A"
+    Type: String
+    Default: "10.99.64.0/19"
+  PrivateAPSubnetBCidrBlock:
+    Description: "CIDR Block of Private AP Subnet C"
+    Type: String
+    Default: "10.99.96.0/19"
+  PrivateDBSubnetACidrBlock:
+    Description: "CIDR Block of Private DB Subnet A"
+    Type: String
+    Default: "10.99.128.0/19"
+  PrivateDBSubnetBCidrBlock:
+    Description: "CIDR Block of Private DB Subnet C"
+    Type: String
+    Default: "10.99.160.0/19"
+  PrivateToolSubnetACidrBlock:
+    Description: "CIDR Block of Private Tool Subnet A"
+    Type: String
+    Default: "10.99.192.0/19"
+  PrivateToolSubnetBCidrBlock:
+    Description: "CIDR Block of Private Tool Subnet C"
+    Type: String
+    Default: "10.99.225.0/19"
+Resources:
+  VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: !Ref VpcCidrBlock
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "VPC"]]
+  InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "IGW"]]
+  AttachInternetGateway:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  NatGatewayAEIP:
+   Type: "AWS::EC2::EIP"
+   Properties:
+     Domain: vpc
+  NatGatewayA:
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt [NatGatewayAEIP, AllocationId]
+      SubnetId: !Ref PublicSubnetA
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "NGW-a"]]
+  NatGatewayBEIP:
+   Type: "AWS::EC2::EIP"
+   Properties:
+     Domain: vpc
+  NatGatewayB:
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt [NatGatewayBEIP, AllocationId]
+      SubnetId: !Ref PublicSubnetB
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "NGW-b"]]
+  PublicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "RTBL-P"]]
+  PublicRoute:
+    Type: "AWS::EC2::Route"
+    DependsOn: InternetGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGateway
+  PrivateRouteTableA:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "RTBL-Pub-a"]]
+  PrivateRouteA:
+    Type: "AWS::EC2::Route"
+    DependsOn: NatGatewayA
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableA
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NatGatewayA
+  PrivateRouteTableB:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "RTBL-Pub-b"]]
+  PrivateRouteB:
+    Type: "AWS::EC2::Route"
+    DependsOn: NatGatewayB
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableB
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NatGatewayB
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetACidrBlock
+      AvailabilityZone: !Select ["0", !GetAZs { "Ref": "AWS::Region" }]
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SNET-Pub-a"]]
+  PublicSubnetARouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+  PublicSubnetB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetBCidrBlock
+      AvailabilityZone: !Select ["1", !GetAZs { "Ref": "AWS::Region" }]
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SNET-Pub-b"]]
+  PublicSubnetBRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+  PrivateAPSubnetA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateAPSubnetACidrBlock
+      AvailabilityZone: !Select ["0", !GetAZs { "Ref": "AWS::Region" }]
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SNET-AP-a"]]
+  PrivateAPSubnetARouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateAPSubnetA
+      RouteTableId: !Ref PrivateRouteTableA
+  PrivateAPSubnetB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateAPSubnetBCidrBlock
+      AvailabilityZone: !Select ["1", !GetAZs { "Ref": "AWS::Region" }]
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SNET-AP-b"]]
+  PrivateAPSubnetBRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateAPSubnetB
+      RouteTableId: !Ref PrivateRouteTableB
+  PrivateDBSubnetA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateDBSubnetACidrBlock
+      AvailabilityZone: !Select ["0", !GetAZs { "Ref": "AWS::Region" }]
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SNET-DB-a"]]
+  PrivateDBSubnetARouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateDBSubnetA
+      RouteTableId: !Ref PrivateRouteTableA
+  PrivateDBSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateDBSubnetBCidrBlock
+      AvailabilityZone: !Select ["1", !GetAZs { "Ref": "AWS::Region" }]
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SNET-DB-b"]]
+  PrivateDBSubnetBRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateDBSubnetB
+      RouteTableId: !Ref PrivateRouteTableB
+  PrivateToolSubnetA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateToolSubnetACidrBlock
+      AvailabilityZone: !Select ["0", !GetAZs { "Ref": "AWS::Region" }]
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SNET-Tool-a"]]
+  PrivateToolSubnetARouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateToolSubnetA
+      RouteTableId: !Ref PrivateRouteTableA
+  PrivateToolSubnetB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateToolSubnetBCidrBlock
+      AvailabilityZone: !Select ["1", !GetAZs { "Ref": "AWS::Region" }]
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SNET-Tool-b"]]
+  PrivateToolSubnetBRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateToolSubnetB
+      RouteTableId: !Ref PrivateRouteTableB
+  DefaultSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: "Default SecurityGroup"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0"
+      Tags:
+        - Key: "Name"
+          Value: !Join ["-", [!Ref Identifier, "SECG"]]
+Outputs:
+  Network:
+    Value: !Ref VPC

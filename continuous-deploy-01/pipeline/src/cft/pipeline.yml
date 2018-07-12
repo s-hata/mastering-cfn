@@ -1,0 +1,197 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Pipeline"
+Parameters:
+  ArtifactBucketName:
+    Type: "String"
+  OAuthToken:
+    Description: "Name of Parameter Store parameter to define the OAuth Token."
+    Type: "AWS::SSM::Parameter::Value<String>"
+    Default: "OAuthToken"
+  CodeBuildProjectName:
+    Description: "Name of CodeBuild project to test the CloudFormation templates."
+    Type: "String"
+Resources:
+  CodePipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties:
+      ArtifactStore:
+        Location: !Ref ArtifactBucketName
+        Type: S3
+      Name: "CFn-CD-example-Pipeline"
+      RestartExecutionOnUpdate: false
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      Stages:
+        - Name: "Source"
+          Actions:
+            - Name: "Fetch_Source"
+              ActionTypeId:
+                Category: "Source"
+                Owner: "ThirdParty"
+                Provider: "GitHub"
+                Version: "1"
+              OutputArtifacts:
+                - Name: "Source"
+              Configuration:
+                Owner: "s-hata"
+                Repo: "cfn-cd-example"
+                Branch: "master"
+                OAuthToken: !Ref OAuthToken
+        - Name: "Test"
+          Actions:
+            - Name: "Test"
+              InputArtifacts:
+                - Name: "Source"
+              ActionTypeId:
+                Category: "Test"
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: Test
+              Configuration:
+                ProjectName: !Ref CodeBuildProjectName
+        - Name: "Provisioning"
+          Actions:
+            - Name: "Provisioning"
+              InputArtifacts:
+                - Name: "Test"
+              ActionTypeId:
+                Category: "Deploy"
+                Owner: "AWS"
+                Provider: "CloudFormation"
+                Version: "1"
+              Configuration:
+                ActionMode: "CREATE_UPDATE"
+                StackName: "CFn-CD-example-Pipeline"
+                TemplatePath: !Sub "Test::infra/cfn/network.yml"
+                TemplateConfiguration: "Test::infra/cfn/config.json"
+                Capabilities: "CAPABILITY_NAMED_IAM"
+                RoleArn: !GetAtt CloudFormationRole.Arn
+              OutputArtifacts:
+                - Name: Provisionning
+              RunOrder: "1"
+  CodePipelineServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'CFn-CD-example-Pipeline-Policies'
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "ssm:DescribeParameters"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "ssm:GetParameters"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "s3:GetObject"
+                  - "s3:GetObjectVersion"
+                  - "s3:GetBucketVersioning"
+                  - "s3:PutObject"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "codecommit:CancelUploadArchive"
+                  - "codecommit:GetBranch"
+                  - "codecommit:GetCommit"
+                  - "codecommit:GetUploadArchiveStatus"
+                  - "codecommit:UploadArchive"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "codedeploy:CreateDeployment"
+                  - "codedeploy:GetApplicationRevision"
+                  - "codedeploy:GetDeployment"
+                  - "codedeploy:GetDeploymentConfig"
+                  - "codedeploy:RegisterApplicationRevision"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "elasticbeanstalk:*"
+                  - "ec2:*"
+                  - "elasticloadbalancing:*"
+                  - "autoscaling:*"
+                  - "cloudwatch:*"
+                  - "s3:*"
+                  - "sns:*"
+                  - "cloudformation:*"
+                  - "rds:*"
+                  - "sqs:*"
+                  - "ecs:*"
+                  - "iam:PassRole"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "lambda:InvokeFunction"
+                  - "lambda:ListFunctions"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "opsworks:CreateDeployment"
+                  - "opsworks:DescribeApps"
+                  - "opsworks:DescribeCommands"
+                  - "opsworks:DescribeDeployments"
+                  - "opsworks:DescribeInstances"
+                  - "opsworks:DescribeStacks"
+                  - "opsworks:UpdateApp"
+                  - "opsworks:UpdateStack"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "cloudformation:CreateStack"
+                  - "cloudformation:DeleteStack"
+                  - "cloudformation:DescribeStacks"
+                  - "cloudformation:UpdateStack"
+                  - "cloudformation:CreateChangeSet"
+                  - "cloudformation:DeleteChangeSet"
+                  - "cloudformation:DescribeChangeSet"
+                  - "cloudformation:ExecuteChangeSet"
+                  - "cloudformation:SetStackPolicy"
+                  - "cloudformation:ValidateTemplate"
+                  - "iam:PassRole"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "codebuild:BatchGetBuilds"
+                  - "codebuild:StartBuild"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+  CloudFormationRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Principal:
+              Service: "cloudformation.amazonaws.com"
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+Outputs:
+  CodePipeline:
+    Description: "Resource name assigned to pipeline"
+    Value: !Ref CodePipeline

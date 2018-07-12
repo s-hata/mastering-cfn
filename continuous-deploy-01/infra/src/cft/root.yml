@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Root Stack"
+Parameters:
+  StackIdentifier:
+    Type: "String"
+    Description: "Stack Identifier"
+    Default: "cft-continuous-deploy-example"
+  BucketName:
+    Type: "String"
+    Description: "S3 Bucket Name"
+Mappings:
+  CONSTRAINTS:
+    STACK:
+      TIMEOUT: 5
+    CFN-TEMPLATE:
+      NETWORK: "infra/src/cft/network.yml"
+Resources:
+  Network:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3-${AWS::Region}.amazonaws.com/${BucketName}/${TemplatePath}"
+          - {
+              TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, NETWORK]
+            }
+      TimeoutInMinutes: !FindInMap [ CONSTRAINTS, STACK, TIMEOUT]

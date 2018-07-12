@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Root Stack"
+Parameters:
+  StackIdentifier:
+    Type: "String"
+    Description: "Stack Identifier"
+    Default: "cfncdexample"
+Mappings:
+  CONSTRAINTS:
+    STACK:
+      BUCKETNAME: "ignite-cfn-template-store"
+      TIMEOUT: 5
+    CFN-TEMPLATE:
+      ARTIFACTREPOSITORY: "cfn-template-examples/artifact-repository.yml"
+      ORCHESTRATION: "cfn-template-examples/pipeline.yml"
+      BUILD: "cfn-template-examples/build.yml"
+    CODEBUILD:
+      PROJECTNAME: "cfncdexample_Codebuild_Project"
+Resources:
+  ArtifactRepository:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3-${AWS::Region}.amazonaws.com/${BucketName}/${TemplatePath}"
+          - {
+              BucketName: !FindInMap [ CONSTRAINTS, STACK, BUCKETNAME ],
+              TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, ARTIFACTREPOSITORY ]
+            }
+      TimeoutInMinutes: !FindInMap [ CONSTRAINTS, STACK, TIMEOUT]
+  Build:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3-${AWS::Region}.amazonaws.com/${BucketName}/${TemplatePath}"
+          - {
+              BucketName: !FindInMap [ CONSTRAINTS, STACK, BUCKETNAME ],
+              TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, BUILD ]
+            }
+      TimeoutInMinutes: !FindInMap [ CONSTRAINTS, STACK, TIMEOUT ]
+      Parameters:
+        Identifier: !Ref StackIdentifier
+        CodeBuildProjectName: !FindInMap [ CONSTRAINTS, CODEBUILD, PROJECTNAME ]
+  Pipeline:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3-${AWS::Region}.amazonaws.com/${BucketName}/${TemplatePath}"
+          - {
+              BucketName: !FindInMap [ CONSTRAINTS, STACK, BUCKETNAME ],
+              TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, ORCHESTRATION ]
+            }
+      TimeoutInMinutes: !FindInMap [ CONSTRAINTS, STACK, TIMEOUT ]
+      Parameters:
+        CodeBuildProjectName: !FindInMap [ CONSTRAINTS, CODEBUILD, PROJECTNAME ]
+        ArtifactBucketName: !GetAtt [ ArtifactRepository, Outputs.ArtifactRepositoryName ]

@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Artifact Repository for CFn Continuous Delivery Example"
+Resources:
+  ArtifactRepository:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: "Delete"
+    Properties:
+      AccessControl: "BucketOwnerFullControl"
+Outputs:
+  ArtifactRepositoryName:
+    Description: "Name of Artifact Repository"
+    Value: !Ref ArtifactRepository
