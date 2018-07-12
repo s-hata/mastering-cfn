@@ -27,7 +27,7 @@ Resources:
           - Name: AWS_REGION
             Value: !Ref AWS::Region
       Source:
-        BuildSpec: "infra/buildspec.yml"
+        BuildSpec: "continuous-deploy-01/infra/buildspec.yml"
         Type: CODEPIPELINE
   CodeBuildServiceRole:
     Type: "AWS::IAM::Role"

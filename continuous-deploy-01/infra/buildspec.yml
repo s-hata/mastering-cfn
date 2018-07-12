@@ -16,7 +16,6 @@ phases:
   build:
     commands:
       - |
-        [ -d .cfn ] || mkdir .cfn
         aws configure set default.region $AWS_REGION
         for template in infra/src/cfn/*.yml; do
           node_modules/.bin/cfn-lint validate $template

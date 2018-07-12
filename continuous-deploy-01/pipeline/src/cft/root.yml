@@ -4,25 +4,25 @@ Parameters:
   StackIdentifier:
     Type: "String"
     Description: "Stack Identifier"
-    Default: "cfncdexample"
+    Default: "mastering-cfn-continuous-deploy-01"
 Mappings:
   CONSTRAINTS:
     STACK:
-      BUCKETNAME: "ignite-cfn-template-store"
+      BUCKETNAME: "ignite-cfn-template-store3"
       TIMEOUT: 5
     CFN-TEMPLATE:
-      ARTIFACTREPOSITORY: "cfn-template-examples/artifact-repository.yml"
-      ORCHESTRATION: "cfn-template-examples/pipeline.yml"
-      BUILD: "cfn-template-examples/build.yml"
+      ARTIFACTREPOSITORY: "examples/mastering-cfn/continuous-deploy-01/pipeline/src/cft/artifact-repository.yml"
+      ORCHESTRATION: "examples/mastering-cfn/continuous-deploy-01/pipeline/src/cft/pipeline.yml"
+      BUILD: "examples/mastering-cfn/continuous-deploy-01/pipeline/src/cft/build.yml"
     CODEBUILD:
-      PROJECTNAME: "cfncdexample_Codebuild_Project"
+      PROJECTNAME: "mastering-cfn-continuous-deploy-01-pj"
 Resources:
   ArtifactRepository:
     Type: "AWS::CloudFormation::Stack"
     Properties:
       TemplateURL:
         Fn::Sub:
-          - "https://s3-${AWS::Region}.amazonaws.com/${BucketName}/${TemplatePath}"
+          - "https://s3.amazonaws.com/${BucketName}/${TemplatePath}"
           - {
               BucketName: !FindInMap [ CONSTRAINTS, STACK, BUCKETNAME ],
               TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, ARTIFACTREPOSITORY ]
@@ -33,7 +33,7 @@ Resources:
     Properties:
       TemplateURL:
         Fn::Sub:
-          - "https://s3-${AWS::Region}.amazonaws.com/${BucketName}/${TemplatePath}"
+          - "https://s3.amazonaws.com/${BucketName}/${TemplatePath}"
           - {
               BucketName: !FindInMap [ CONSTRAINTS, STACK, BUCKETNAME ],
               TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, BUILD ]
@@ -47,7 +47,7 @@ Resources:
     Properties:
       TemplateURL:
         Fn::Sub:
-          - "https://s3-${AWS::Region}.amazonaws.com/${BucketName}/${TemplatePath}"
+          - "https://s3.amazonaws.com/${BucketName}/${TemplatePath}"
           - {
               BucketName: !FindInMap [ CONSTRAINTS, STACK, BUCKETNAME ],
               TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, ORCHESTRATION ]
