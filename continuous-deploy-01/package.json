@@ -1,0 +1,20 @@
+{
+  "name": "continuous-deploy-01",
+  "description": "Continuous Deploy example for AWS CloudFormation Template.",
+  "version": "1.0.0",
+  "author": "Shinichi Hatano",
+  "scripts": {},
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "^2.245.1"
+  },
+  "devDependencies": {
+    "cfn-lint": "^1.7.1",
+    "chalk": "^2.4.1",
+    "concat-files": "^0.1.1",
+    "gulp": "^3.9.1",
+    "gulp-plumber": "^1.2.0",
+    "js-yaml": "^3.11.0",
+    "merge-yaml": "^1.0.0"
+  }
+}

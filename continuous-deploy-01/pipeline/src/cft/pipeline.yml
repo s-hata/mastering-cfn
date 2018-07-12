@@ -3,6 +3,7 @@ Description: "Pipeline"
 Parameters:
   ArtifactBucketName:
     Type: "String"
+    Default: "mastering-aws-artifactrepo-01"
   OAuthToken:
     Description: "Name of Parameter Store parameter to define the OAuth Token."
     Type: "AWS::SSM::Parameter::Value<String>"
@@ -10,6 +11,7 @@ Parameters:
   CodeBuildProjectName:
     Description: "Name of CodeBuild project to test the CloudFormation templates."
     Type: "String"
+    Default: "mastering-aws-codebuildpj-01"
 Resources:
   CodePipeline:
     Type: "AWS::CodePipeline::Pipeline"
@@ -33,7 +35,7 @@ Resources:
                 - Name: "Source"
               Configuration:
                 Owner: "s-hata"
-                Repo: "cfn-cd-example"
+                Repo: "mastering-cfn"
                 Branch: "master"
                 OAuthToken: !Ref OAuthToken
         - Name: "Test"
