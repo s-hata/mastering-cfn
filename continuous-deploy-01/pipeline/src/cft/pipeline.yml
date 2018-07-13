@@ -64,13 +64,13 @@ Resources:
                 Version: "1"
               Configuration:
                 ActionMode: "CREATE_UPDATE"
-                StackName: "CFn-CD-example-Pipeline"
-                TemplatePath: !Sub "Test::infra/cfn/network.yml"
-                TemplateConfiguration: "Test::infra/cfn/config.json"
+                StackName: "mastering-cfn-continuous-deploy-01-resources"
+                TemplatePath: !Sub "Test::continuous-deploy-01/infra/cfn/network.yml"
+                TemplateConfiguration: "Test::continuous-deploy-01/infra/cfn/config.json"
                 Capabilities: "CAPABILITY_NAMED_IAM"
                 RoleArn: !GetAtt CloudFormationRole.Arn
               OutputArtifacts:
-                - Name: Provisionning
+                - Name: "Provisionning"
               RunOrder: "1"
   CodePipelineServiceRole:
     Type: "AWS::IAM::Role"
