@@ -20,7 +20,6 @@ phases:
         echo `pwd`
         echo `ls -la`
         echo `aws configure list`
-        aws configure set default.region $AWS_REGION
         for template in infra/src/cfn/*.yml; do
           node_modules/.bin/cfn-lint validate $template
         done
