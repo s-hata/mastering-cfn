@@ -19,9 +19,8 @@ phases:
       - |
         echo `pwd`
         echo `ls -la`
-        echo `aws configure list`
-        for template in infra/src/cfn/*.yml; do
-          node_modules/.bin/cfn-lint validate $template
+        for template in infra/src/cft/*.yml; do
+          ./node_modules/.bin/cfn-lint validate $template
         done
   post_build:
     commands:
