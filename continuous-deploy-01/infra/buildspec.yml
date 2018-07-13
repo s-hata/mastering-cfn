@@ -7,6 +7,7 @@ phases:
         echo "Build & Test started on `date`"
         echo `uname -a`
         echo `node --version`
+        echo `aws --version`
         cd continuous-deploy-01
         npm install
   pre_build:
@@ -16,6 +17,8 @@ phases:
   build:
     commands:
       - |
+        echo `pwd`
+        echo `la -la`
         aws configure set default.region $AWS_REGION
         for template in infra/src/cfn/*.yml; do
           node_modules/.bin/cfn-lint validate $template

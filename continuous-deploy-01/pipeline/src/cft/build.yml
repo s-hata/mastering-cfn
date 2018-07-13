@@ -13,7 +13,7 @@ Mappings:
       SERVICEROLEPOLICYNAME: "SERVICEROLEPOLICYNAME"
 Resources:
   CodeBuildProject:
-    Type: AWS::CodeBuild::Project
+    Type: "AWS::CodeBuild::Project"
     Properties:
       Name: !Ref CodeBuildProjectName
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
