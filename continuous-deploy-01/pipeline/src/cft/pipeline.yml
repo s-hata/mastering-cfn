@@ -47,7 +47,7 @@ Resources:
                 Category: "Test"
                 Owner: AWS
                 Version: 1
-                Provider: CodeBuild
+                Provider: "CodeBuild"
               OutputArtifacts:
                 - Name: Test
               Configuration:
@@ -65,8 +65,8 @@ Resources:
               Configuration:
                 ActionMode: "CREATE_UPDATE"
                 StackName: "mastering-cfn-continuous-deploy-01-resources"
-                TemplatePath: !Sub "Test::continuous-deploy-01/infra/cfn/network.yml"
-                TemplateConfiguration: "Test::continuous-deploy-01/infra/cfn/config.json"
+                TemplatePath: !Sub "Test::continuous-deploy-01/infra/cft/network.yml"
+                TemplateConfiguration: "Test::continuous-deploy-01/infra/cft/config.json"
                 Capabilities: "CAPABILITY_NAMED_IAM"
                 RoleArn: !GetAtt CloudFormationRole.Arn
               OutputArtifacts:
