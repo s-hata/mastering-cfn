@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Artifact Repository for CFn Continuous Delivery Example"
 Resources:
-  ArtifactRepository:
+  ArtifactStore:
     Type: "AWS::S3::Bucket"
     Properties:
       AccessControl: "BucketOwnerFullControl"
 Outputs:
-  ArtifactRepositoryName:
+  ArtifactStoreName:
     Description: "Name of Artifact Repository"
-    Value: !Ref ArtifactRepository
+    Value: !Ref ArtifactStore

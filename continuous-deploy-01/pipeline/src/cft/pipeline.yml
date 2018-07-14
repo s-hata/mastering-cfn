@@ -65,8 +65,8 @@ Resources:
               Configuration:
                 ActionMode: "CREATE_UPDATE"
                 StackName: "mastering-cfn-continuous-deploy-01-resources"
-                TemplatePath: !Sub "Test::continuous-deploy-01/infra/cft/network.yml"
-                TemplateConfiguration: "Test::continuous-deploy-01/infra/cft/config.json"
+                TemplatePath: !Sub "Test::continuous-deploy-01/infra/src/cft/network.yml"
+                TemplateConfiguration: "Test::continuous-deploy-01/infra/src/cft/config.json"
                 Capabilities: "CAPABILITY_NAMED_IAM"
                 RoleArn: !GetAtt CloudFormationRole.Arn
               OutputArtifacts:
@@ -85,7 +85,7 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: 'CFn-CD-example-Pipeline-Policies'
+        - PolicyName: "CFn-CD-example-Pipeline-Policies"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:

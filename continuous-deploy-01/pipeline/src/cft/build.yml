@@ -18,7 +18,7 @@ Resources:
       Name: !Ref CodeBuildProjectName
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Artifacts:
-        Type: CODEPIPELINE
+        Type: "CODEPIPELINE"
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
@@ -28,7 +28,7 @@ Resources:
             Value: !Ref AWS::Region
       Source:
         BuildSpec: "continuous-deploy-01/infra/buildspec.yml"
-        Type: CODEPIPELINE
+        Type: "CODEPIPELINE"
   CodeBuildServiceRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -44,25 +44,25 @@ Resources:
       Policies:
         - PolicyName: !Join [ "-", [ !Sub "${AWS::StackName}", !FindInMap [CONSTRAINTS, CODEBUILD, SERVICEROLEPOLICYNAME]]]
           PolicyDocument:
-            Version: 2012-10-17
+            Version: "2012-10-17"
             Statement:
-              - Effect: Allow
+              - Effect: "Allow"
                 Resource:
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${CodeBuildProjectName}
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${CodeBuildProjectName}:*
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${CodeBuildProjectName}"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${CodeBuildProjectName}:*"
                 Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-              - Effect: Allow
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+              - Effect: "Allow"
                 Resource:
                   - "*"
                 Action:
-                  - s3:PutObject
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-              - Effect: Allow
+                  - "s3:PutObject"
+                  - "s3:GetObject"
+                  - "s3:GetObjectVersion"
+              - Effect: "Allow"
                 Resource:
-                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/CodeBuild/*
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/CodeBuild/*"
                 Action:
-                  - ssm:GetParameters
+                  - "ssm:GetParameters"
