@@ -19,9 +19,9 @@ Parameters:
 Mappings:
   Constraints:
     CFt:
-      Runtime: "infra/client-runtime.yml"
+      Runtime: "custom-resource.yml"
     Config:
-      Runtime: "infra/server-runtime-config.json"
+      Runtime: "custom-resource-config.json"
 Resources:
   Pipeline:
     Type: "AWS::CodePipeline::Pipeline"
@@ -87,6 +87,10 @@ Resources:
                       }
                 Capabilities: "CAPABILITY_NAMED_IAM"
                 RoleArn: !GetAtt CloudFormationRole.Arn
+                ParameterOverrides: !Sub |
+                  {
+                    "S3Bucket": "${ArtifactRepositoryName}"
+                  }
               RunOrder: "1"
   CodePipelineServiceRole:
     Type: "AWS::IAM::Role"

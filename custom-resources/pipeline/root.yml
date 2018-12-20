@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Pipeline Resources for exercise10"
+Description: "Pipeline Resources for custome CloudFormation resource"
 Parameters:
   CFnTemplateBucketName:
-    Description: "(Should be defined) S3 Bucket Name for CFn Templates placed"
+    Description: "S3 Bucket Name for CFn Templates placed"
     Type: "String"
   CFnTemplateBucketRegion:
-    Description: "(Should be defined) S3 Bucket Region for CFn Templates placed"
+    Description: "S3 Bucket Region for CFn Templates placed"
     Type: "String"
 Mappings:
   Constraints:
@@ -14,10 +14,10 @@ Mappings:
     SourceCodeRepository:
       TargetBranch: "master"
     CFn:
-      SourceCodeRepository: "exercise10/pipeline/sourcecode-repository.yml"
-      ArtifactRepository: "exercise10/pipeline/artifact-repository.yml"
-      Build: "exercise10/pipeline/build.yml"
-      Pipeline: "exercise10/pipeline/pipeline.yml"
+      SourceCodeRepository: "custom-resources/pipeline/sourcecode-repository.yml"
+      ArtifactRepository: "custom-resources/pipeline/artifact-repository.yml"
+      Build: "custom-resources/pipeline/build.yml"
+      Pipeline: "custom-resources/pipeline/pipeline.yml"
 Conditions:
   IsUsEast1: !Equals [ !Ref CFnTemplateBucketRegion, "us-east-1" ]
   IsUsEast2: !Equals [ !Ref CFnTemplateBucketRegion, "us-east-2" ]
