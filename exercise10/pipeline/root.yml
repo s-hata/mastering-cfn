@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Pipeline Resources for exercise10"
+Parameters:
+  CFnTemplateBucketName:
+    Description: "(Should be defined) S3 Bucket Name for CFn Templates placed"
+    Type: "String"
+  CFnTemplateBucketRegion:
+    Description: "(Should be defined) S3 Bucket Region for CFn Templates placed"
+    Type: "String"
+Mappings:
+  Constraints:
+    Project:
+      Name: "mastering-cfn"
+    SourceCodeRepository:
+      TargetBranch: "master"
+    CFn:
+      SourceCodeRepository: "exercise10/pipeline/sourcecode-repository.yml"
+      ArtifactRepository: "exercise10/pipeline/artifact-repository.yml"
+      Build: "exercise10/pipeline/build.yml"
+      Pipeline: "exercise10/pipeline/pipeline.yml"
+Conditions:
+  IsUsEast1: !Equals [ !Ref CFnTemplateBucketRegion, "us-east-1" ]
+  IsUsEast2: !Equals [ !Ref CFnTemplateBucketRegion, "us-east-2" ]
+Resources:
+  SourceCodeRepository:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3${Region}.amazonaws.com/${CFnTemplateBucketName}/${ProjectName}/${Path}"
+          - {
+              Region: !If [ IsUsEast1, "", !If [ IsUsEast2, !Sub ".${CFnTemplateBucketRegion}", !Sub "-${CFnTemplateBucketRegion}" ]],
+              ProjectName: !FindInMap [ Constraints, Project, Name ],
+              Path: !FindInMap [ Constraints, CFn, SourceCodeRepository ]
+            }
+      TimeoutInMinutes: "5"
+      Parameters:
+        ParentStackName: !Ref AWS::StackName
+  ArtifactRepository:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3${Region}.amazonaws.com/${CFnTemplateBucketName}/${ProjectName}/${Path}"
+          - {
+              Region: !If [ IsUsEast1, "", !If [ IsUsEast2, !Sub ".${CFnTemplateBucketRegion}", !Sub "-${CFnTemplateBucketRegion}" ]],
+              ProjectName: !FindInMap [ Constraints, Project, Name ],
+              Path: !FindInMap [ Constraints, CFn, ArtifactRepository ]
+            }
+      TimeoutInMinutes: "5"
+      Parameters:
+        ParentStackName: !Ref AWS::StackName
+  Build:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3${Region}.amazonaws.com/${CFnTemplateBucketName}/${ProjectName}/${Path}"
+          - {
+              Region: !If [ IsUsEast1, "", !If [ IsUsEast2, !Sub ".${CFnTemplateBucketRegion}", !Sub "-${CFnTemplateBucketRegion}" ]],
+              ProjectName: !FindInMap [ Constraints, Project, Name ],
+              Path: !FindInMap [ Constraints, CFn, Build ]
+            }
+      TimeoutInMinutes: "5"
+      Parameters:
+        ParentStackName: !Ref AWS::StackName
+        ArtifactRepositoryName: !GetAtt ArtifactRepository.Outputs.Name
+  Pipeline:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TimeoutInMinutes: "5"
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3${Region}.amazonaws.com/${CFnTemplateBucketName}/${ProjectName}/${Path}"
+          - {
+              Region: !If [ IsUsEast1, "", !If [ IsUsEast2, !Sub ".${CFnTemplateBucketRegion}", !Sub "-${CFnTemplateBucketRegion}" ]],
+              ProjectName: !FindInMap [ Constraints, Project, Name ],
+              Path: !FindInMap [ Constraints, CFn, Pipeline ]
+            }
+      Parameters:
+        ParentStackName: !Ref AWS::StackName
+        SourceRepositoryName: !GetAtt SourceCodeRepository.Outputs.Name
+        Branch: !FindInMap [ Constraints, SourceCodeRepository, TargetBranch ]
+        ArtifactRepositoryName: !GetAtt ArtifactRepository.Outputs.Name
+        BuildProjectName: !GetAtt Build.Outputs.ProjectName

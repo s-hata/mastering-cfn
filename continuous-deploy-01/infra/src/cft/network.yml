@@ -11,35 +11,35 @@ Parameters:
     Default: "10.99.0.0/16"
   PublicSubnetACidrBlock:
     Description: "CIDR Block of Public Subnet A"
-    Type: String
+    Type: "String"
     Default: "10.99.0.0/19"
   PublicSubnetBCidrBlock:
     Description: "CIDR Block of Public Subnet C"
-    Type: String
+    Type: "String"
     Default: "10.99.32.0/19"
   PrivateAPSubnetACidrBlock:
     Description: "CIDR Block of Private AP Subnet A"
-    Type: String
+    Type: "String"
     Default: "10.99.64.0/19"
   PrivateAPSubnetBCidrBlock:
     Description: "CIDR Block of Private AP Subnet C"
-    Type: String
+    Type: "String"
     Default: "10.99.96.0/19"
   PrivateDBSubnetACidrBlock:
     Description: "CIDR Block of Private DB Subnet A"
-    Type: String
+    Type: "String"
     Default: "10.99.128.0/19"
   PrivateDBSubnetBCidrBlock:
     Description: "CIDR Block of Private DB Subnet C"
-    Type: String
+    Type: "String"
     Default: "10.99.160.0/19"
   PrivateToolSubnetACidrBlock:
     Description: "CIDR Block of Private Tool Subnet A"
-    Type: String
+    Type: "String"
     Default: "10.99.192.0/19"
   PrivateToolSubnetBCidrBlock:
     Description: "CIDR Block of Private Tool Subnet C"
-    Type: String
+    Type: "String"
     Default: "10.99.225.0/19"
 Resources:
   VPC:

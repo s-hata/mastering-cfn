@@ -22,6 +22,6 @@ Resources:
         Fn::Sub:
           - "https://s3-${AWS::Region}.amazonaws.com/${BucketName}/${TemplatePath}"
           - {
-              TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, NETWORK]
+              TemplatePath: !FindInMap [ CONSTRAINTS, CFN-TEMPLATE, NETWORK ]
             }
-      TimeoutInMinutes: !FindInMap [ CONSTRAINTS, STACK, TIMEOUT]
+      TimeoutInMinutes: !FindInMap [ CONSTRAINTS, STACK, TIMEOUT ]

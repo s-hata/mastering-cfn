@@ -17,9 +17,11 @@ phases:
   build:
     commands:
       - |
-        echo `pwd`
-        echo `ls -la`
         for template in infra/src/cft/*.yml; do
+          echo "$template" | xargs -I% -t aws cloudformation validate-template --template-body file://%
+        done
+        for template in infra/src/cft/*.yml; do
+          echo $template
           ./node_modules/.bin/cfn-lint validate $template
         done
   post_build:

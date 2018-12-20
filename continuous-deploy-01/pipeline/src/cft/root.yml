@@ -42,6 +42,8 @@ Resources:
       Parameters:
         Identifier: !Ref StackIdentifier
         CodeBuildProjectName: !FindInMap [ CONSTRAINTS, CODEBUILD, PROJECTNAME ]
+        ArtifactRepositoryName: !GetAtt [ ArtifactRepository, Outputs.ArtifactRepositoryName ]
+        CodePipelineName: !GetAtt [ Pipeline, Outputs.CodePipeline ]
   Pipeline:
     Type: "AWS::CloudFormation::Stack"
     Properties:

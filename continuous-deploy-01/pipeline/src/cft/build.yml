@@ -7,6 +7,12 @@ Parameters:
   CodeBuildProjectName:
     Description: "Name of CodeBuild project to test the CloudFormation templates."
     Type: "String"
+  ArtifactRepositoryName:
+    Description: "Name of the ArtifactRepository"
+    Type: "String"
+  CodePipelineName:
+    Description: "Name of the CodePipeline"
+    Type: "String"
 Mappings:
   CONSTRAINTS:
     CODEBUILD:
