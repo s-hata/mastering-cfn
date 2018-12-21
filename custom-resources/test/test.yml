@@ -4,4 +4,4 @@ Resources:
   GenS3Key:
     Type: "Custom::GetS3Key"
     Properties:
-      ServiceToken: "arn:aws:lambda:us-east-1:633585768377:function:custom-resources-runtime-deploy-GenS3KeyFunction-17KR6B0POIUB0"
+      ServiceToken: "arn:aws:lambda:us-east-1:633585768377:function:custom-resource-runtime-deploy-GenS3KeyFunction-QNAC1BIU4BE8"

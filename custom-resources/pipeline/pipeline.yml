@@ -220,6 +220,6 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AdministratorAccess"
 Outputs:
-  CodePipelineName:
+  Name:
     Description: "Resource name assigned to pipeline"
     Value: !Ref Pipeline

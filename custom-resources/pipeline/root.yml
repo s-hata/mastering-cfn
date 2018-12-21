@@ -85,14 +85,14 @@ Resources:
         BuildProjectName: !GetAtt Build.Outputs.ProjectName
 Outputs:
   S3:
-    Description: "The Lint of S3 Dashboard"
+    Description: "S3 Dashboard"
     Value: !Sub "https://s3.console.aws.amazon.com/s3/buckets/${ArtifactRepository.Outputs.Name}/?region=${AWS::Region}&tab=overview"
   CodeCommit:
-    Description: "The Lint of CodeCommit Dashboard"
+    Description: "CodeCommit Dashboard"
     Value: !Sub "https://console.aws.amazon.com/codesuite/codecommit/repositories/${AWS::StackName}/setup?region=${AWS::Region}"
   CodeBuild:
-    Description: "The Lint of CodeBuild Dashboard"
+    Description: "CodeBuild Dashboard"
     Value: !Sub "https://console.aws.amazon.com/codesuite/codebuild/projects/${Build.Outputs.ProjectName}/history?region=${AWS::Region}"
   CodePipeline:
-    Description: "The Lint of CodePipeline Dashboard"
-    Value: !Sub "https://console.aws.amazon.com/codesuite/codepipeline/pipelines/${AWS::StackName}/view?region=${AWS::Region}"
+    Description: "CodePipeline Dashboard"
+    Value: !Sub "https://console.aws.amazon.com/codesuite/codepipeline/pipelines/${Pipeline.Outputs.Name}/view?region=${AWS::Region}"
