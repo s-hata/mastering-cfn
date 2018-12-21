@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Custom CloudFormation Resources"
+Parameters:
+  S3Bucket:
+    Type: "String"
+  S3Key:
+    Type: "String"
+Resources:
+  CustomActionFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
+      Handler: "custom_action.handler"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: "python3.6"
+      Timeout: '30'
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: "CustomActionPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+              - Effect: "Allow"
+                Action:
+                  - "codepipeline:PutJobSuccessResult"
+                  - "codepipeline:PutJobFailureResult"
+                Resource: "*"
+              - Effect: "Allow"
+                Action:
+                  - "lambda:ListFunctions"
+                Resource:
+                  - "*"
+Outputs:
+  CustomFunctionArn:
+    Description: "The arn of the custom resource function"
+    Value: !GetAtt CustomActionFunction.Arn

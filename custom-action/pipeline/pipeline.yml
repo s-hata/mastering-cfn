@@ -1,0 +1,239 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Pipeline Resources for exercise10"
+Parameters:
+  ParentStackName:
+    Description: "Parent Stack Name for This Stack Resources"
+    Type: "String"
+  SourceRepositoryName:
+    Description: "CodeCommit Repository"
+    Type: "String"
+  Branch:
+    Description: "Codecommit Branch Used in CodeBuild"
+    Type: "String"
+  ArtifactRepositoryName:
+    Description: "Artifact Bucket"
+    Type: "String"
+  BuildProjectName:
+    Description: "CodeBuild project Name for Client Build and UT"
+    Type: "String"
+Mappings:
+  Constraints:
+    CFt:
+      Runtime: "custom-action.yml"
+    Config:
+      Runtime: "custom-action-config.json"
+Resources:
+  Pipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties:
+      ArtifactStore:
+        Location: !Ref ArtifactRepositoryName
+        Type: S3
+      Name: !Sub '${ParentStackName}-pipeline'
+      RestartExecutionOnUpdate: 'false'
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      Stages:
+        - Name: "Source"
+          Actions:
+            - Name: "SourceFetch"
+              ActionTypeId:
+                Category: "Source"
+                Owner: "AWS"
+                Provider: "CodeCommit"
+                Version: "1"
+              OutputArtifacts:
+                - Name: "SourceFetch"
+              Configuration:
+                RepositoryName: !Ref SourceRepositoryName
+                BranchName: !Ref Branch
+        - Name: "Build"
+          Actions:
+            - Name: "Build"
+              InputArtifacts:
+                - Name: "SourceFetch"
+              ActionTypeId:
+                Category: "Build"
+                Owner: "AWS"
+                Version: "1"
+                Provider: "CodeBuild"
+              Configuration:
+                ProjectName: !Ref BuildProjectName
+              OutputArtifacts:
+                - Name: "Build"
+        - Name: "Deploy"
+          Actions:
+            - Name: "Deploy"
+              InputArtifacts:
+                - Name: "Build"
+              ActionTypeId:
+                Category: "Deploy"
+                Owner: "AWS"
+                Provider: "CloudFormation"
+                Version: "1"
+              Configuration:
+                ActionMode: "CREATE_UPDATE"
+                StackName: !Sub "${ParentStackName}-runtime-deploy"
+                TemplatePath:
+                  Fn::Sub:
+                    - "Build::${CFt}"
+                    - {
+                        CFt: !FindInMap [ Constraints, CFt, Runtime ]
+                      }
+                TemplateConfiguration:
+                  Fn::Sub:
+                    - "Build::${Config}"
+                    - {
+                        Config: !FindInMap [ Constraints, Config, Runtime ]
+                      }
+                Capabilities: "CAPABILITY_NAMED_IAM"
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                ParameterOverrides: !Sub |
+                  {
+                    "S3Bucket": "${ArtifactRepositoryName}"
+                  }
+              RunOrder: "1"
+        - Name: "Lambda"
+          Actions:
+            - Name: "Lambda"
+              InputArtifacts:
+                - Name: "Build"
+              ActionTypeId:
+                Category: "Invoke"
+                Owner: "AWS"
+                Version: "1"
+                Provider: "Lambda"
+              Configuration:
+                FunctionName: "custom-action-runtime-deploy-CustomActionFunction-1NNIKRO4MUYKJ"
+              OutputArtifacts:
+                - Name: "Lambda"
+  CodePipelineServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub "${ParentStackName}-pipeline-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - "iam:PassRole"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+                Condition:
+                  StringEqualsIfExists:
+                    iam:PassedToService:
+                      - "cloudformation.amazonaws.com"
+                      - "elasticbeanstalk.amazonaws.com"
+                      - "ec2.amazonaws.com"
+              - Action:
+                  - "codecommit:CancelUploadArchive"
+                  - "codecommit:GetBranch"
+                  - "codecommit:GetCommit"
+                  - "codecommit:GetUploadArchiveStatus"
+                  - "codecommit:UploadArchive"
+                Resource:
+                  - !Sub "arn:aws:codecommit:*:${AWS::AccountId}:*"
+                Effect: "Allow"
+              - Action:
+                  - "codedeploy:CreateDeployment"
+                  - "codedeploy:GetApplicationRevision"
+                  - "codedeploy:GetDeployment"
+                  - "codedeploy:GetDeploymentConfig"
+                  - "codedeploy:RegisterApplicationRevision"
+                Resource:
+                  - !Sub "arn:aws:codedeploy:*:${AWS::AccountId}:*"
+                Effect: "Allow"
+              - Action:
+                  - "elasticbeanstalk:*"
+                  - "ec2:*"
+                  - "elasticloadbalancing:*"
+                  - "autoscaling:*"
+                  - "cloudwatch:*"
+                  - "s3:*"
+                  - "sns:*"
+                  - "cloudformation:*"
+                  - "rds:*"
+                  - "sqs:*"
+                  - "ecs:*"
+                Resource:
+                  - !Sub "arn:aws:elasticbeanstalk:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:ec2:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:elasticloadbalancing:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:autoscaling:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:cloudwatch:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:s3:::*"
+                  - !Sub "arn:aws:sns:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:cloudformation:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:rds:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:sqs:*:${AWS::AccountId}:*"
+                  - !Sub "arn:aws:ecs:*:${AWS::AccountId}:*"
+                Effect: "Allow"
+              - Action:
+                  - "lambda:InvokeFunction"
+                  - "lambda:ListFunctions"
+                Resource:
+                  - "*"
+                Effect: "Allow"
+              - Action:
+                  - "opsworks:CreateDeployment"
+                  - "opsworks:DescribeApps"
+                  - "opsworks:DescribeCommands"
+                  - "opsworks:DescribeDeployments"
+                  - "opsworks:DescribeInstances"
+                  - "opsworks:DescribeStacks"
+                  - "opsworks:UpdateApp"
+                  - "opsworks:UpdateStack"
+                Resource:
+                  - !Sub "arn:aws:opsworks:*:${AWS::AccountId}:*"
+                Effect: "Allow"
+              - Action:
+                  - "codebuild:BatchGetBuilds"
+                  - "codebuild:StartBuild"
+                Resource:
+                  - !Sub "arn:aws:codebuild:*:${AWS::AccountId}:*"
+                Effect: "Allow"
+              - Action:
+                  - "devicefarm:ListProjects"
+                  - "devicefarm:ListDevicePools"
+                  - "devicefarm:GetRun"
+                  - "devicefarm:GetUpload"
+                  - "devicefarm:CreateUpload"
+                  - "devicefarm:ScheduleRun"
+                Resource:
+                  - !Sub "arn:aws:devicefarm:*:${AWS::AccountId}:*"
+                Effect: "Allow"
+              - Action:
+                  - "servicecatalog:ListProvisioningArtifacts"
+                  - "servicecatalog:CreateProvisioningArtifact"
+                  - "servicecatalog:DescribeProvisioningArtifact"
+                  - "servicecatalog:DeleteProvisioningArtifact"
+                  - "servicecatalog:UpdateProduct"
+                Resource:
+                  - !Sub "arn:aws:servicecatalog:*:${AWS::AccountId}:*"
+                Effect: "Allow"
+  CloudFormationRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Principal:
+              Service: "cloudformation.amazonaws.com"
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+Outputs:
+  Name:
+    Description: "Resource name assigned to pipeline"
+    Value: !Ref Pipeline

@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Artifact Repository Resource for exercise10"
+Parameters:
+  ParentStackName:
+    Description: "Parent Stack Name for This Stack Resources"
+    Type: "String"
+Resources:
+  ArtifactRepository:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: "Delete"
+    Properties:
+      AccessControl: "BucketOwnerFullControl"
+      Tags:
+        - Key: "Name"
+          Value: "Artifact Repository"
+        - Key: "Owner"
+          Value: !Ref ParentStackName
+Outputs:
+  Name:
+    Description: "Name of Artifact Repository S3 Bucket"
+    Value: !Ref ArtifactRepository

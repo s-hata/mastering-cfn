@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Pipeline Resources for custome CodePipeline action"
+Parameters:
+  CFnTemplateBucketName:
+    Description: "S3 Bucket Name for CFn Templates placed"
+    Type: "String"
+  CFnTemplateBucketRegion:
+    Description: "S3 Bucket Region for CFn Templates placed"
+    Type: "String"
+Mappings:
+  Constraints:
+    Project:
+      Name: "mastering-cfn"
+    SourceCodeRepository:
+      TargetBranch: "master"
+    CFn:
+      SourceCodeRepository: "custom-action/pipeline/sourcecode-repository.yml"
+      ArtifactRepository: "custom-action/pipeline/artifact-repository.yml"
+      Build: "custom-action/pipeline/build.yml"
+      Pipeline: "custom-action/pipeline/pipeline.yml"
+Conditions:
+  IsUsEast1: !Equals [ !Ref CFnTemplateBucketRegion, "us-east-1" ]
+  IsUsEast2: !Equals [ !Ref CFnTemplateBucketRegion, "us-east-2" ]
+Resources:
+  SourceCodeRepository:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3${Region}.amazonaws.com/${CFnTemplateBucketName}/${ProjectName}/${Path}"
+          - {
+              Region: !If [ IsUsEast1, "", !If [ IsUsEast2, !Sub ".${CFnTemplateBucketRegion}", !Sub "-${CFnTemplateBucketRegion}" ]],
+              ProjectName: !FindInMap [ Constraints, Project, Name ],
+              Path: !FindInMap [ Constraints, CFn, SourceCodeRepository ]
+            }
+      TimeoutInMinutes: "5"
+      Parameters:
+        ParentStackName: !Ref AWS::StackName
+  ArtifactRepository:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3${Region}.amazonaws.com/${CFnTemplateBucketName}/${ProjectName}/${Path}"
+          - {
+              Region: !If [ IsUsEast1, "", !If [ IsUsEast2, !Sub ".${CFnTemplateBucketRegion}", !Sub "-${CFnTemplateBucketRegion}" ]],
+              ProjectName: !FindInMap [ Constraints, Project, Name ],
+              Path: !FindInMap [ Constraints, CFn, ArtifactRepository ]
+            }
+      TimeoutInMinutes: "5"
+      Parameters:
+        ParentStackName: !Ref AWS::StackName
+  Build:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3${Region}.amazonaws.com/${CFnTemplateBucketName}/${ProjectName}/${Path}"
+          - {
+              Region: !If [ IsUsEast1, "", !If [ IsUsEast2, !Sub ".${CFnTemplateBucketRegion}", !Sub "-${CFnTemplateBucketRegion}" ]],
+              ProjectName: !FindInMap [ Constraints, Project, Name ],
+              Path: !FindInMap [ Constraints, CFn, Build ]
+            }
+      TimeoutInMinutes: "5"
+      Parameters:
+        ParentStackName: !Ref AWS::StackName
+        ArtifactRepositoryName: !GetAtt ArtifactRepository.Outputs.Name
+  Pipeline:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TimeoutInMinutes: "5"
+      TemplateURL:
+        Fn::Sub:
+          - "https://s3${Region}.amazonaws.com/${CFnTemplateBucketName}/${ProjectName}/${Path}"
+          - {
+              Region: !If [ IsUsEast1, "", !If [ IsUsEast2, !Sub ".${CFnTemplateBucketRegion}", !Sub "-${CFnTemplateBucketRegion}" ]],
+              ProjectName: !FindInMap [ Constraints, Project, Name ],
+              Path: !FindInMap [ Constraints, CFn, Pipeline ]
+            }
+      Parameters:
+        ParentStackName: !Ref AWS::StackName
+        SourceRepositoryName: !GetAtt SourceCodeRepository.Outputs.Name
+        Branch: !FindInMap [ Constraints, SourceCodeRepository, TargetBranch ]
+        ArtifactRepositoryName: !GetAtt ArtifactRepository.Outputs.Name
+        BuildProjectName: !GetAtt Build.Outputs.ProjectName
+Outputs:
+  S3:
+    Description: "S3 Dashboard"
+    Value: !Sub "https://s3.console.aws.amazon.com/s3/buckets/${ArtifactRepository.Outputs.Name}/?region=${AWS::Region}&tab=overview"
+  CodeCommit:
+    Description: "CodeCommit Dashboard"
+    Value: !Sub "https://console.aws.amazon.com/codesuite/codecommit/repositories/${AWS::StackName}/setup?region=${AWS::Region}"
+  CodeBuild:
+    Description: "CodeBuild Dashboard"
+    Value: !Sub "https://console.aws.amazon.com/codesuite/codebuild/projects/${Build.Outputs.ProjectName}/history?region=${AWS::Region}"
+  CodePipeline:
+    Description: "CodePipeline Dashboard"
+    Value: !Sub "https://console.aws.amazon.com/codesuite/codepipeline/pipelines/${Pipeline.Outputs.Name}/view?region=${AWS::Region}"

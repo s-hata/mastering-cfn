@@ -1,0 +1,6 @@
+{
+  "Parameters" : {
+    "S3Bucket": "DONT-EDIT-HERE",
+    "S3Key": "#S3_KEY#"
+  }
+}

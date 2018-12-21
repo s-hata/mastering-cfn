@@ -10,8 +10,8 @@ LOGGER.setLevel(logging.INFO)
 def handler(event, context):
     signal.alarm((context.get_remaining_time_in_millis() // 1000) - 1)
     try:
-        LOGGER.info(f"REQUEST RECEIVED[event]:\n ${event}")
-        LOGGER.info(f"REQUEST RECEIVED[context]:\n ${context}")
+        LOGGER.info(f"REQUEST RECEIVED[event]:\n {event}")
+        LOGGER.info(f"REQUEST RECEIVED[context]:\n {vars(context)}")
         if event["RequestType"] == "Create":
             create_handler(event, context)
         elif event["RequestType"] == "Update":

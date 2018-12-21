@@ -1,0 +1,33 @@
+version: 0.2
+ 
+phases:
+  pre_build:
+    commands:
+      - echo Installing packages...
+      - |
+        apk add --update --no-cache \
+        ca-certificates \
+        openssh-client \
+        openssl \
+        python \
+        py-pip \
+        curl \
+        sed \
+        jq \
+        zip \
+        wget
+      - pip install awscli
+      - aws --version
+  build:
+    commands:
+      - echo Build started on `date`
+      - cd src
+      - zip ../lambda-${CODEBUILD_SOURCE_VERSION##*/}.zip ./*
+      - aws s3 cp ../lambda-${CODEBUILD_SOURCE_VERSION##*/}.zip s3://${ARTIFACT_REPOSITORY}
+      - sed -i -e s/#S3_KEY#/lambda-${CODEBUILD_SOURCE_VERSION##*/}.zip/ ../custom-action-config.json
+  post_build:
+    commands:
+      - echo Build completed on `date`
+artifacts:
+  files:
+    - '**/*'
